@@ -1,4 +1,3 @@
-#include <UIKit/UIKit.h>
 #import "common.h"
 
 #define PLIST_PATH @"/var/mobile/Library/Preferences/com.spookybois.spotifyalarm.plist"
@@ -17,7 +16,10 @@ inline bool GetPrefBool(NSString *key) {
 {
     %orig;
 
+    Alarm *spotAlarm = MSHookIvar<Alarm *>(self, "_alarm");
+
     NSLog(@"[SpotifyAlarm]:[Variable Check] enabled: %d shuffle: %d random: %d  alarmonly: %d", (int)SAEnabled, (int)SAShuffle, (int)SARandom, (int)SAAlarm);
+    %log((NSString *)@"[SpotifyAlarm]:[Alarm ID] current alarm ID: ", [spotAlarm alarmID]);
 
 }
 %end
