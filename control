@@ -1,0 +1,10 @@
+Package: com.spookybois.spotifyalarm
+Name: SpotifyAlarm
+Depends: mobilesubstrate, preferenceloader, firmware (>= 8.0)
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Shuffle a Spotify playlist on enabled alarms.
+Maintainer: shane
+Author: shane
+Section: Tweaks
+Homepage: https://github.com/shane1027
