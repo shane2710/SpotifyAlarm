@@ -18,7 +18,7 @@
 			<key>defaults</key>
 			<string>com.spookybois.spotifyalarm</string>
 			<key>key</key>
-			<string>key1</string>
+			<string>enabled</string>
 			<key>label</key>
 			<string>Enabled</string>
 		</dict>
@@ -36,7 +36,7 @@
 			<key>defaults</key>
 			<string>com.spookybois.spotifyalarm</string>
 			<key>key</key>
-			<string>key2</string>
+			<string>shuffle</string>
 			<key>label</key>
 			<string>Shuffle</string>
 		</dict>
@@ -54,7 +54,7 @@
 			<key>defaults</key>
 			<string>com.spookybois.spotifyalarm</string>
 			<key>key</key>
-			<string>key3</string>
+			<string>random</string>
 			<key>label</key>
 			<string>Random Song</string>
 		</dict>
@@ -72,7 +72,7 @@
 			<key>defaults</key>
 			<string>com.spookybois.spotifyalarm</string>
 			<key>key</key>
-			<string>key4</string>
+			<string>alarmonly</string>
 			<key>label</key>
 			<string>Alarm Only</string>
 		</dict>
