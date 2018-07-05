@@ -196,18 +196,30 @@ inline void SetPrefBool(NSString *key, bool state) {
         // TODO: explore launching apps in background without screen unlocked
 
         /*  launch spotify in the foregroud    */
-        [[UIApplication sharedApplication] launchApplicationWithIdentifier:@"com.spotify.client" suspended:NO];
+        //[[UIApplication sharedApplication] launchApplicationWithIdentifier:@"com.spotify.client" suspended:NO];
+
+        /* open spotify URI */
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"spotify:user:sryan8:playlist:3oXeKfZTuVOlo7b7y3cItJ"]];
 
         //TODO:  launch spotify just like the DefaultPlayer application does,
         // try to find that source, or defaultspot, so that it is in the
         // bacjground and starts playing
+        //
+        // TODO: allow user to paste in spotifyURI for morning playlist, or
+        // have each alarm use a custom playlist, etc.... maybe even have a UI
+        // like the choosing ringtone one that lists playlists??
+        //
+        // could be cool, can dynamically rename the 'choose song' cell and
+        // hijack that whole selection pane!
 
 
         /*  grab now playing application after spotify has loaded by hooking into
          *  spotify, and then start playing music!  work on playlist later..  */
 
         //TODO: dump spotify headers just like dumping mobiletimer headers and
-        //find the useful ones for playing a certain URI
+        //find the useful ones for playing a certain URI.. actually now that
+        //I've dumped them, just need to find the button to shuffle play a
+        //currently viewed playlist
 
 
     }
