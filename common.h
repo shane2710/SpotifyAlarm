@@ -165,3 +165,16 @@ extern NSString *alarmID;
 - (BOOL)isAlarmNotification:(id)arg1;
 @property(readonly, retain, nonatomic) NSArray *alarms;
 @end
+
+/*  launch applications from springboard    */
+@interface UIApplication (SpotifyAlarm)
+-(BOOL)launchApplicationWithIdentifier:(id)arg1 suspended:(BOOL)arg2;
++(id)sharedApplication;
+@end
+
+
+/*  unlock lock screen for launching and viewing spotify    */
+@interface SBLockScreenManager : NSObject
++(id)sharedInstance;
+-(void)attemptUnlockWithPasscode:(id)arg1;
+@end

@@ -7,6 +7,7 @@
 #define SAAlarm GetPrefBool(@"alarmonly")
 #define SATitle @"Spotify Alarm"
 #define SADefaultTitle @"Alarm"
+#define PASSCODE @"555555"
 #define DEBUG true
 
 NSString *alarmID = NULL;
@@ -121,6 +122,10 @@ inline void SetPrefBool(NSString *key, bool state) {
     // for appropriate titles in _cancelbuttonclicekd and _donebuttonclicked
     //
     // also double check all %origs are passed when necessary
+    //
+    // and add a popup using tableView:didSelectRowAtIndexPath to explain
+    // spotify alarm's usage of alarm title so that users don't get frustrated
+    // trying to change alarm titles..?
 
     // if the alarm is disabled in the database...
     if (!(GetPrefBool([spotAlarm alarmID]))) {
@@ -175,11 +180,34 @@ inline void SetPrefBool(NSString *key, bool state) {
         NSLog(@"Silencing...");
         [self _handleSecondaryAction];      // ayee! it worked!!
 
-        /*  launch spotify in the background    */
+        /*  unlock screen   */
+        [[NSClassFromString(@"SBLockScreenManager") sharedInstance] attemptUnlockWithPasscode:PASSCODE];
+
+        // nice that worked!!  need to find a way to authenticate passcode
+        // tho...   */
+        
+        // maybe add a settings input for the user to add their passcode?  and
+        // then set a variable to know whether or not their passcode has been
+        // saved before and check this on switch enable.  save in plist and
+        // display in settigs as ***** or whatevs.  and use this to unlock,
+        // allowing the springboard to launch spotify.. on launch, start
+        // playlist, and lock screen!
+        //
+        // TODO: explore launching apps in background without screen unlocked
+
+        /*  launch spotify in the foregroud    */
+        [[UIApplication sharedApplication] launchApplicationWithIdentifier:@"com.spotify.client" suspended:NO];
+
+        //TODO:  launch spotify just like the DefaultPlayer application does,
+        // try to find that source, or defaultspot, so that it is in the
+        // bacjground and starts playing
 
 
         /*  grab now playing application after spotify has loaded by hooking into
          *  spotify, and then start playing music!  work on playlist later..  */
+
+        //TODO: dump spotify headers just like dumping mobiletimer headers and
+        //find the useful ones for playing a certain URI
 
 
     }
@@ -225,3 +253,5 @@ inline void SetPrefBool(NSString *key, bool state) {
 }
 
 %end
+
+
