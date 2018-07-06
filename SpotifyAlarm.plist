@@ -8,6 +8,7 @@
 		<array>
 			<string>com.apple.mobiletimer</string>
 			<string>com.apple.springboard</string>
+            <string>com.spotify.client</string>
 		</array>
 	</dict>
 </dict>

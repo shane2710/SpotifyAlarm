@@ -199,7 +199,7 @@ inline void SetPrefBool(NSString *key, bool state) {
         //[[UIApplication sharedApplication] launchApplicationWithIdentifier:@"com.spotify.client" suspended:NO];
 
         /* open spotify URI */
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"spotify:user:sryan8:playlist:3oXeKfZTuVOlo7b7y3cItJ"]];
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"spotify:track:43cGYhbBwrY4vTF9ZpSeWi"]];
 
         //TODO:  launch spotify just like the DefaultPlayer application does,
         // try to find that source, or defaultspot, so that it is in the
@@ -219,7 +219,7 @@ inline void SetPrefBool(NSString *key, bool state) {
         //TODO: dump spotify headers just like dumping mobiletimer headers and
         //find the useful ones for playing a certain URI.. actually now that
         //I've dumped them, just need to find the button to shuffle play a
-        //currently viewed playlist
+        //currently viewed playlist...
 
 
     }
@@ -265,5 +265,44 @@ inline void SetPrefBool(NSString *key, bool state) {
 }
 
 %end
+
+
+%hook SPAction
+
+- (id)initWithOrder:(long long)arg1 logContext:(id)arg2
+{
+    NSLog(@"Debug init with order");
+    %log(@"Debug", (NSString *)arg1, @"and ", (NSString *)arg2);
+    return %orig(arg1, arg2);
+}
+
+%end
+
+
+
+
+// OH WOW I FIGURED OUT A MUCH BETTER WAY TO HOOK ALARMS AND CHECK IF THEY ARE
+// SPOTIFY ENABLED :))))))
+
+%hook SBClockDataProvider
+
+-(BOOL)_isAlarmNotification:(id)arg1
+{
+    NSLog(@"SpotifyAlarm isAlarmNotification");
+    %log(arg1);
+    return %orig(arg1);
+}
+
+-(id)_alarmIDFromNotificationRequest:(id)arg1
+{
+    NSLog(@"SpotifyAlarm alarmIDfromnotif");
+    %log(arg1);
+    id tmp =  %orig(arg1);
+    %log(tmp);
+    return tmp;
+}
+
+%end
+
 
 

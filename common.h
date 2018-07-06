@@ -178,3 +178,38 @@ extern NSString *alarmID;
 +(id)sharedInstance;
 -(void)attemptUnlockWithPasscode:(id)arg1;
 @end
+
+
+
+
+
+@interface SPAction : NSObject
+- (id)initWithOrder:(long long)arg1 logContext:(id)arg2;
+@end
+
+
+@interface SBClockDataProvider : NSObject
++(id)sharedInstance;
+-(BOOL)_isAlarmNotification:(id)arg1;
+-(id)_alarmIDFromNotificationRequest:(id)arg1;
+@end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
