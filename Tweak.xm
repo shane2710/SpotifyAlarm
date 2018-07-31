@@ -5,12 +5,11 @@
 #define SAShuffle GetPrefBool(@"shuffle")
 #define SARandom GetPrefBool(@"random")
 #define SAAlarm GetPrefBool(@"alarmonly")
-#define SATitle @"Spotify Alarm"
-#define SADefaultTitle @"Alarm"
 #define PASSCODE @"555555"
 #define DEBUG true
 
 NSString *alarmID = NULL;
+BOOL handleAlarm = 0;
 
 
 /*  method to get plist variable state  */
@@ -30,7 +29,6 @@ inline void SetPrefBool(NSString *key, bool state) {
     [preferences writeToFile:PLIST_PATH atomically:YES];
 }
 
-
 @implementation MySpotifyView
 
 /*  implement the adding / removing of an alarm to Spotify Alarm database   */
@@ -42,6 +40,7 @@ inline void SetPrefBool(NSString *key, bool state) {
 }
 
 /* add Spotify Alarm toggle in alarm edit view */
+// TODO: integrate the toggle with exisiting toggle panel
 -(void)addToView:(NSString *)name :(BOOL)switchState
 {
     // initialize toggle switch label
@@ -92,49 +91,12 @@ inline void SetPrefBool(NSString *key, bool state) {
     // position of the spotify slider switch on render
     if (GetPrefBool(alarmID)) {
         [spotView addToView:@"Spotify Shuffle:":true];
-        // [spotAlarm setTitle:SATitle];
-        // i don't think this situation could ever occur, but just in case
     } else {
         [spotView addToView:@"Spotify Shuffle:":false];
-        if ([[spotAlarm title] isEqualToString:SATitle]) {
-            [spotAlarm setTitle:SADefaultTitle];
-        }
     }
 
     NSLog(@"[SpotifyAlarm]:[Variable Check] enabled: %d shuffle: %d random: %d  alarmonly: %d", (int)SAEnabled, (int)SAShuffle, (int)SARandom, (int)SAAlarm);
     %log((NSString *)@"[SpotifyAlarm]:[Alarm ID] current alarm ID: ", [spotAlarm alarmID]);
-
-}
-
-- (void)_cancelButtonClicked:(id)arg1 {
-    %orig(arg1);
-
-    // grab the alarm we're currently editing...
-    Alarm *spotAlarm = MSHookIvar<Alarm *>(self, "_alarm");
-
-    // TODO: somehow bug exists here: when editing an existing alarm with
-    // spotify shuffle enabled, disabling spotify shuffle then hitting cancel
-    // disables spotify shuffle but doesn't reset the title to SADefault..
-    // curious.  Editing again resets it tho now that i added a check for this
-    // on line 98 in loadView()
-    //
-    // one solution would be to only change in setTitle() and then also check
-    // for appropriate titles in _cancelbuttonclicekd and _donebuttonclicked
-    //
-    // also double check all %origs are passed when necessary
-    //
-    // and add a popup using tableView:didSelectRowAtIndexPath to explain
-    // spotify alarm's usage of alarm title so that users don't get frustrated
-    // trying to change alarm titles..?
-
-    // if the alarm is disabled in the database...
-    if (!(GetPrefBool([spotAlarm alarmID]))) {
-        // make sure the title is not SATitle
-        if ([[spotAlarm title] isEqualToString:SATitle]) {
-            [spotAlarm setTitle:SADefaultTitle];
-        }
-    }
-
 }
 
 %end
@@ -146,127 +108,72 @@ inline void SetPrefBool(NSString *key, bool state) {
 
  -(void)loadView
 {
-
-    /* check if the alarm is a SpotifyAlarm based on message in notification */
-    NCNotificationRequest *nreq = MSHookIvar<NCNotificationRequest *>(self, "_request");
-    NCNotificationContent *ncont = MSHookIvar<NCNotificationContent *>(nreq, "_content");
-
-    NSString* message = [ncont message];
-    BOOL equal = [message isEqualToString:SATitle];
-
-    if (DEBUG) {
-        /*  for some reason one of these logging methods isn't wokring..    */
-        NSLog(@"Debug equal: %d", (int)[message isEqualToString:SATitle]);
-        %log((NSString *)@"Debug equal %d", (int)equal);
-
-        NSString* header = [ncont header];
-        NSString* title = [ncont title];
-        NSString* subtitle = [ncont subtitle];
-        NSString* topic = [ncont topic];
-        NSString* description = [ncont description];
-        NSString* debugDescription = [ncont debugDescription];
-        NSLog((NSString *)@"First %@", (NSString *)@"Debug");
-        NSLog((NSString *)@"Debug header: %@", (NSString *)header);
-        NSLog((NSString *)@"Debug title: %@", (NSString *)title);
-        NSLog((NSString *)@"Debug sub: %@", (NSString *)subtitle);
-        NSLog((NSString *)@"Debug msg: %@", (NSString *)message);
-        NSLog((NSString *)@"Debug topic: %@", (NSString *)topic);
-        NSLog((NSString *)@"Debug desc: %@", (NSString *)description);
-        NSLog((NSString *)@"Debug debdesc: %@", (NSString *)debugDescription);
-        NSLog((NSString *)@"Second %@", (NSString *)@"Debug");
-    }
-
-    if (equal) {
-        NSLog(@"Silencing...");
+    /*  i wish this wasn't a global variable but don't know how to reference
+     *  the 'sharedInstance' existing object from another hooked function */
+    // possible fix:
+    // https://www.reddit.com/r/jailbreakdevelopers/comments/6vqw48/adding_a_sharedinstance_to_springboard_not_a/
+    if (handleAlarm) {
+        NSLog(@"SpotifyAlarm Silencing...");
         [self _handleSecondaryAction];      // ayee! it worked!!
 
         /*  unlock screen   */
         [[NSClassFromString(@"SBLockScreenManager") sharedInstance] attemptUnlockWithPasscode:PASSCODE];
 
-        // nice that worked!!  need to find a way to authenticate passcode
-        // tho...   */
-        
-        // maybe add a settings input for the user to add their passcode?  and
-        // then set a variable to know whether or not their passcode has been
-        // saved before and check this on switch enable.  save in plist and
-        // display in settigs as ***** or whatevs.  and use this to unlock,
-        // allowing the springboard to launch spotify.. on launch, start
-        // playlist, and lock screen!
-        //
-        // TODO: explore launching apps in background without screen unlocked
-
-        /*  launch spotify in the foregroud    */
-        //[[UIApplication sharedApplication] launchApplicationWithIdentifier:@"com.spotify.client" suspended:NO];
-
-        /* open spotify URI */
+        /*  open specified spotify URI  */
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"spotify:track:43cGYhbBwrY4vTF9ZpSeWi"]];
 
-        //TODO:  launch spotify just like the DefaultPlayer application does,
-        // try to find that source, or defaultspot, so that it is in the
-        // bacjground and starts playing
+        /*  lock screen after spotify loads?  */
+        // currently this prevents spotify from opening URI until unlocked
+        // again, need a timer or hook appFinishedLaunching etc
         //
-        // TODO: allow user to paste in spotifyURI for morning playlist, or
-        // have each alarm use a custom playlist, etc.... maybe even have a UI
-        // like the choosing ringtone one that lists playlists??
-        //
-        // could be cool, can dynamically rename the 'choose song' cell and
-        // hijack that whole selection pane!
+        // [[NSClassFromString(@"SBLockScreenManager") sharedInstance] _lockUI];
+        // [[NSClassFromString(@"SpringBoard") sharedApplication] _simulateLockButtonPress];
 
-
-        /*  grab now playing application after spotify has loaded by hooking into
-         *  spotify, and then start playing music!  work on playlist later..  */
-
-        //TODO: dump spotify headers just like dumping mobiletimer headers and
-        //find the useful ones for playing a certain URI.. actually now that
-        //I've dumped them, just need to find the button to shuffle play a
-        //currently viewed playlist...
-
+        handleAlarm = 0;
 
     }
+
+    // maybe add a settings input for the user to add their passcode?  and
+    // then set a variable to know whether or not their passcode has been
+    // saved before and check this on switch enable.  save in plist and
+    // display in settigs as ***** or whatevs.  and use this to unlock,
+    // allowing the springboard to launch spotify.. on launch, start
+    // playlist, and lock screen!
+    //
+    // TODO: explore launching apps in background without screen unlocked
+    // (currently I don't think that this is possible)
+
+    //TODO:  launch spotify just like the DefaultPlayer application does,
+    // try to find that source, or defaultspot, so that it is in the
+    // bacjground and starts playing
+    //
+    // the above would be especially cool because if an alarm went off while
+    // the phone was unlocked the music would just start playing, as the app
+    // launches in the background..!  one possible implementation would be
+    // launching the app with the background setting (second arg) set, and then
+    // issuing a now playing application resume, as spotify would likely take
+    // over as the now playing app
+    //
+    // TODO: allow user to paste in spotifyURI for morning playlist, or
+    // have each alarm use a custom playlist, etc.... maybe even have a UI
+    // like the choosing ringtone one that lists playlists??
+    //
+    // could be cool, can dynamically rename the 'choose song' cell and
+    // hijack that whole selection pane!
+
+
+    //TODO: dump spotify headers just like dumping mobiletimer headers and
+    //find the useful ones for playing a certain URI.. actually now that
+    //I've dumped them, just need to find the button to shuffle play a
+    //currently viewed playlist...
 
     %orig;
-
 }
 
 %end
 
 
-/*  catch the alarm being modified to mark Spotify enabled alarms w/ title  */
-%hook Alarm
-
--(void)setTitle:(NSString *)arg1
-{
-    /*  check if this alarm is in the spotify database  */
-    NSString *myAlarmID = MSHookIvar<NSString *>(self, "_alarmID");
-
-    // if valid alarmID
-    if (myAlarmID) {
-        // and if that alarmID is registered as a SpotifyAlarm
-        if (GetPrefBool(myAlarmID)) {
-            NSLog(@"Debug alarm enabled in database");
-            // set the Spotify Alarm title as indicator
-            %orig(SATitle);
-        } else {
-            // otherwise, don't
-            NSLog(@"Debug alarm not enabled in database");
-            if ([[self title] isEqualToString:SATitle]) {
-                // but make sure to remove the title if disabled
-                NSLog(@"Debug has enabled title, resetting...");
-                %orig(SADefaultTitle);
-            } else {
-                NSLog(@"Debug title is fine");
-                %log((NSString *)arg1);
-                %orig(arg1);
-            }
-        }
-    } else {
-        %orig(arg1);
-    }
-}
-
-%end
-
-
+/*  used to explore how spotify actions are built   */
 %hook SPAction
 
 - (id)initWithOrder:(long long)arg1 logContext:(id)arg2
@@ -280,29 +187,57 @@ inline void SetPrefBool(NSString *key, bool state) {
 
 
 
-
-// OH WOW I FIGURED OUT A MUCH BETTER WAY TO HOOK ALARMS AND CHECK IF THEY ARE
-// SPOTIFY ENABLED :))))))
-
 %hook SBClockDataProvider
 
 -(BOOL)_isAlarmNotification:(id)arg1
 {
-    NSLog(@"SpotifyAlarm isAlarmNotification");
-    %log(arg1);
-    return %orig(arg1);
-}
+    BOOL isAlarm = %orig(arg1);
 
--(id)_alarmIDFromNotificationRequest:(id)arg1
-{
-    NSLog(@"SpotifyAlarm alarmIDfromnotif");
-    %log(arg1);
-    id tmp =  %orig(arg1);
-    %log(tmp);
-    return tmp;
+    /*  cool, we've got an alarm notification   */
+    if (isAlarm) {
+
+        /*  capture notification request and extract alarmID    */
+        UNNotificationRequest *req = [(UNNotification *)arg1 request];
+        NSString *firedAlarmID = [self _alarmIDFromNotificationRequest:req];
+
+        NSLog(@"SpotifyAlarm: _isAlarmNotification fired with alarmID: %@ and arg %@", firedAlarmID, arg1);
+
+        /*  check if alarmID is in the enabled database */
+        if (GetPrefBool(firedAlarmID)) {
+
+            /*  check whether or not device is locked   */
+            BOOL isLocked = [[NSClassFromString(@"SBLockScreenManager") sharedInstance] isUILocked];
+            NSLog(@"SpotifyAlarm: device lock state: %d", (int)isLocked);
+
+            if (isLocked) {
+                /*  enable handling of fullscreen notification  */
+                handleAlarm = 1;
+            } else {
+                /* dismiss alarm notification and launch spotify */
+                //TODO: silence alarm sound, or set it to none on spot toggle
+                [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"spotify:track:43cGYhbBwrY4vTF9ZpSeWi"]];
+            }
+
+        }
+
+    } else {
+        NSLog(@"[SpotifyAlarm]:_isAlarmNotification evaluated false");
+    }
+
+    return isAlarm;
 }
 
 %end
 
+/*
+ * If I better understood how to use the code below, could be a better way to
+ * grab all alarm notifications?
 
+CFNotificationCenterAddObserver(CFNotificationCenterGetLocalCenter(), //center
+	NULL, // observer
+	alarmFired, // callback
+	CFSTR("SBClockAlarmsDidFireNotification"), // event name
+	NULL, // object
+	CFNotificationSuspensionBehaviorDeliverImmediately);
 
+    */
